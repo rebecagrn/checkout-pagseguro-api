@@ -1,4 +1,4 @@
-# CheckoutPagseguroAPI
+# Checkout Transparente - PagSeguro API
 
 PagSeguro API (checkout transparante).
 
