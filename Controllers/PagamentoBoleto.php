@@ -1,0 +1,61 @@
+<?php
+header('Access-Control-Allow-Origin: *');
+include("../config/Config.php");
+$Data["email"]=EMAIL_PAGSEGURO;
+$Data["token"]=TOKEN_SANDBOX;
+$Data["paymentMode"]="default";
+$Data["paymentMethod"]="boleto";
+$HashCard=$_POST['HashCard'];
+$NomeComprador=filter_input(INPUT_POST, 'NomeComprador', FILTER_SANITIZE_SPECIAL_CHARS);
+$CPFComprador=filter_input(INPUT_POST, 'CPFComprador', FILTER_SANITIZE_SPECIAL_CHARS);
+$DDDComprador=filter_input(INPUT_POST, 'DDDComprador', FILTER_SANITIZE_SPECIAL_CHARS);
+$TelefoneComprador=filter_input(INPUT_POST, 'TelefoneComprador', FILTER_SANITIZE_SPECIAL_CHARS);
+$Endereco=filter_input(INPUT_POST, 'Endereco', FILTER_SANITIZE_SPECIAL_CHARS);
+$Numero=filter_input(INPUT_POST, 'Numero', FILTER_SANITIZE_SPECIAL_CHARS);
+$Complemento=filter_input(INPUT_POST, 'Complemento', FILTER_SANITIZE_SPECIAL_CHARS);
+$Bairro=filter_input(INPUT_POST, 'Bairro', FILTER_SANITIZE_SPECIAL_CHARS);
+$Cidade=filter_input(INPUT_POST, 'Cidade', FILTER_SANITIZE_SPECIAL_CHARS);
+$UF=filter_input(INPUT_POST, 'UF', FILTER_SANITIZE_SPECIAL_CHARS);
+$CEP=filter_input(INPUT_POST, 'CEP', FILTER_SANITIZE_SPECIAL_CHARS);
+$Products=json_decode($_POST['Products']);
+foreach ($Products as $key=>$Product) {
+    $i = $key + 1;
+    $Data["itemId{$i}"] = $Product->id;
+    $Data["itemDescription{$i}"] = $Product->Descricao;
+    $Data["itemAmount{$i}"] = $Product->Valor;
+    $Data["itemQuantity{$i}"] = $Product->Quantidade;
+}
+$Data["receiverEmail"]=EMAIL_PAGSEGURO;
+$Data["currency"]="BRL";
+$Data["notificationURL="]="https://www.meusite.com.br/notificacao.php";
+$Data["reference"]="83783783737";
+$Data["senderName"]=$NomeComprador;
+$Data["senderCPF"]=$CPFComprador;
+$Data["senderAreaCode"]=$DDDComprador;
+$Data["senderPhone"]=$TelefoneComprador;
+$Data["senderEmail"]="SENDER EMAIL AQUI";
+$Data["senderHash"]=$HashCard;
+$Data["shippingAddressStreet"]=$Endereco;
+$Data["shippingAddressNumber"]=$Numero;
+$Data["shippingAddressComplement"]=$Complemento;
+$Data["shippingAddressDistrict"]=$Bairro;
+$Data["shippingAddressPostalCode"]=$CEP;
+$Data["shippingAddressCity"]=$Cidade;
+$Data["shippingAddressState"]=$UF;
+$Data["shippingAddressCountry"]="BRA";
+$Data["shippingType"]="1";
+$Data["shippingCost"]="0.00";
+
+$BuildQuery=http_build_query($Data);
+$Url="https://ws.sandbox.pagseguro.uol.com.br/v2/transactions";
+
+$Curl=curl_init($Url);
+curl_setopt($Curl, CURLOPT_HTTPHEADER, array("Content-Type: application/x-www-form-urlencoded; charset=UTF-8"));
+curl_setopt($Curl, CURLOPT_POST, true);
+curl_setopt($Curl, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($Curl, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($Curl, CURLOPT_POSTFIELDS, $BuildQuery);
+$Retorno=curl_exec($Curl);
+curl_close($Curl);
+$Xml=simplexml_load_string($Retorno);
+echo $Xml->paymentLink;
